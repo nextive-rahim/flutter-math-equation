@@ -1,0 +1,160 @@
+import '../../render/layout/eqn_array.dart';
+import '../../render/layout/shift_baseline.dart';
+import '../../utils/iterable_extensions.dart';
+import '../options.dart';
+import '../size.dart';
+import '../syntax_tree.dart';
+import 'matrix.dart';
+
+/// Equantion array node. Brings support for equationa alignment.
+class EquationArrayNode extends SlotableNode<EquationRowNode?> {
+  /// `arrayStretch` parameter from the context.
+  ///
+  /// Affects the minimum row height and row depth for each row.
+  ///
+  /// `\smallmatrix` has an `arrayStretch` of 0.5.
+  final double arrayStretch;
+
+  /// Whether to add an extra 3 pt spacing between each row.
+  ///
+  /// True for `\aligned` and `\alignedat`
+  final bool addJot;
+
+  /// Arrayed equations.
+  final List<EquationRowNode> body;
+
+  /// Style for horizontal separator lines.
+  ///
+  /// This includes outermost lines. Different from MathML!
+  final List<MatrixSeparatorStyle> hlines;
+
+  /// Spacings between rows;
+  final List<Measurement> rowSpacings;
+
+  /// Further `\hline`/`\hdashline`s in the same gap as [hlines]
+  /// (`\hline\hline`), 0.25em apart (KaTeX array.ts).
+  final List<List<MatrixSeparatorStyle>> hLineExtras;
+
+  /// Equation tags, one per row of [body] (null: the row has none), or null
+  /// for environments without tags. Tags are in their final text form —
+  /// `(3)`, or a `\tag`'s text.
+  final List<EquationRowNode?>? tags;
+
+  /// Tags on the left instead of the right.
+  final bool leqno;
+
+  EquationArrayNode({
+    this.addJot = false,
+    required this.body,
+    this.arrayStretch = 1.0,
+    List<MatrixSeparatorStyle>? hlines,
+    List<Measurement>? rowSpacings,
+    List<EquationRowNode?>? tags,
+    this.leqno = false,
+    List<List<MatrixSeparatorStyle>>? hLineExtras,
+  }) : hLineExtras = (hLineExtras ?? []).extendToByFill(
+         body.length + 1,
+         const [],
+       ),
+       tags = tags == null || tags.every((tag) => tag == null)
+           ? null
+           : tags.extendToByFill(body.length, null),
+       hlines = (hlines ?? []).extendToByFill(
+         body.length + 1,
+         MatrixSeparatorStyle.none,
+       ),
+       rowSpacings = (rowSpacings ?? []).extendToByFill(
+         body.length,
+         Measurement.zero,
+       );
+
+  @override
+  BuildResult buildWidget(
+    MathOptions options,
+    List<BuildResult?> childBuildResults,
+  ) => BuildResult(
+    options: options,
+    widget: ShiftBaseline(
+      relativePos: 0.5,
+      offset: options.fontMetrics.axisHeight.cssEm.toLpUnder(options),
+      child: EqnArray(
+        tagRows: [
+          for (var i = 0; i < (tags?.length ?? 0); i++)
+            if (tags![i] != null) i,
+        ],
+        tagGap: 1.0.cssEm.toLpUnder(options),
+        leqno: leqno,
+        hLineExtras: hLineExtras,
+        hLineGap: 0.25.cssEm.toLpUnder(options),
+        ruleThickness: options.fontMetrics.defaultRuleThickness.cssEm.toLpUnder(
+          options,
+        ),
+        jotSize: addJot ? 3.0.pt.toLpUnder(options) : 0.0,
+        arrayskip: 12.0.pt.toLpUnder(options) * arrayStretch,
+        hlines: hlines,
+        rowSpacings: rowSpacings
+            .map((e) => e.toLpUnder(options))
+            .toList(growable: false),
+        // Rows first, then the tags of the rows that have one.
+        children: childBuildResults.nonNulls
+            .map((e) => e.widget)
+            .toList(growable: false),
+      ),
+    ),
+  );
+
+  @override
+  List<MathOptions> computeChildOptions(MathOptions options) =>
+      List.filled(body.length + (tags?.length ?? 0), options, growable: false);
+
+  @override
+  List<EquationRowNode?> computeChildren() => [...body, ...?tags];
+
+  @override
+  AtomType get leftType => AtomType.ord;
+
+  @override
+  AtomType get rightType => AtomType.ord;
+
+  @override
+  bool shouldRebuildWidget(MathOptions oldOptions, MathOptions newOptions) =>
+      false;
+
+  @override
+  EquationArrayNode updateChildren(List<EquationRowNode?> newChildren) =>
+      copyWith(
+        body: newChildren.take(body.length).cast<EquationRowNode>().toList(),
+        tags: tags == null ? null : newChildren.skip(body.length).toList(),
+      );
+
+  @override
+  Map<String, Object?> toJson() => super.toJson()
+    ..addAll({
+      if (addJot != false) 'addJot': addJot,
+      'body': body.map((e) => e.toJson()),
+      if (arrayStretch != 1.0) 'arrayStretch': arrayStretch,
+      'hlines': hlines.map((e) => e.toString()),
+      'rowSpacings': rowSpacings.map((e) => e.toString()),
+      if (tags != null) 'tags': tags!.map((e) => e?.toJson()),
+      if (leqno) 'leqno': leqno,
+    });
+
+  EquationArrayNode copyWith({
+    double? arrayStretch,
+    bool? addJot,
+    List<EquationRowNode>? body,
+    List<MatrixSeparatorStyle>? hlines,
+    List<Measurement>? rowSpacings,
+    List<EquationRowNode?>? tags,
+    List<List<MatrixSeparatorStyle>>? hLineExtras,
+  }) => EquationArrayNode(
+    arrayStretch: arrayStretch ?? this.arrayStretch,
+    addJot: addJot ?? this.addJot,
+    body: body ?? this.body,
+    hlines: hlines ?? this.hlines,
+    rowSpacings: rowSpacings ?? this.rowSpacings,
+    tags: tags ?? this.tags,
+    leqno: leqno,
+    hLineExtras: hLineExtras ?? this.hLineExtras,
+  );
+}

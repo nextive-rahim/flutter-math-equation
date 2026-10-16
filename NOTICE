@@ -1,0 +1,9 @@
+flutter_equation_support
+
+The math engine in lib/src/ and lib/katex_fonts/ is derived from flutter_math
+(https://github.com/znjameswu/flutter_math) via flutter_math_fork 0.7.4
+(https://github.com/simpleclub/flutter_math), licensed under the Apache
+License 2.0 (see LICENSE). Modified by the flutter_equation_support authors.
+
+The KaTeX fonts in lib/katex_fonts/fonts/ are from KaTeX
+(https://github.com/KaTeX/KaTeX), licensed under the MIT License (see lib/katex_fonts/LICENSE).

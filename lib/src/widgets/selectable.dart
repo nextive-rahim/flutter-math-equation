@@ -1,0 +1,713 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
+
+import '../ast/options.dart';
+import '../ast/style.dart';
+import '../ast/syntax_tree.dart';
+import '../encoder/tex/encoder.dart';
+import '../parser/tex/parse_error.dart';
+import '../parser/tex/parser.dart';
+import '../parser/tex/settings.dart';
+import '../utils/complex_script.dart';
+import 'controller.dart';
+import 'exception.dart';
+import 'math.dart';
+import 'mode.dart';
+import 'scope.dart';
+import 'selection/cursor_timer_manager.dart';
+import 'selection/focus_manager.dart';
+import 'selection/overlay_manager.dart';
+import 'selection/selection_manager.dart';
+import 'selection/web_selection_manager.dart';
+
+const defaultSelection = TextSelection.collapsed(offset: -1);
+
+/// Selectable math widget.
+///
+/// On top of non-selectable [Math], it adds selection functionality. Users can
+/// select by long press gesture, drag gesture, moving selection handles or
+/// pointer selection. The selected region can be encoded into TeX and copied
+/// to clipboard.
+///
+/// See [SelectableText] as this widget aims to fully imitate its behavior.
+class SelectableMath extends StatelessWidget {
+  /// SelectableMath default constructor.
+  ///
+  /// Requires either a parsed [ast] or a [parseException].
+  ///
+  /// See [SelectableMath] for its member documentation.
+  const SelectableMath({
+    super.key,
+    this.ast,
+    this.autofocus = false,
+    this.cursorColor,
+    this.cursorRadius,
+    this.cursorWidth = 2.0,
+    this.cursorHeight,
+    this.dragStartBehavior = DragStartBehavior.start,
+    this.enableInteractiveSelection = true,
+    this.focusNode,
+    this.mathStyle = MathStyle.display,
+    this.logicalPpi,
+    this.onErrorFallback = defaultOnErrorFallback,
+    this.options,
+    this.parseException,
+    this.showCursor = false,
+    this.textScaleFactor,
+    this.textSelectionControls,
+    this.textStyle,
+    MathToolbarOptions? toolbarOptions,
+  }) : assert(ast != null || parseException != null),
+       toolbarOptions = toolbarOptions ?? const MathToolbarOptions();
+
+  /// The equation to display.
+  ///
+  /// It can be null only when [parseException] is not null.
+  final SyntaxTree? ast;
+
+  /// {@macro flutter.widgets.editableText.autofocus}
+  final bool autofocus;
+
+  /// The color to use when painting the cursor.
+  ///
+  /// Defaults to the theme's `cursorColor` when null.
+  final Color? cursorColor;
+
+  /// {@macro flutter.widgets.editableText.cursorRadius}
+  final Radius? cursorRadius;
+
+  /// {@macro flutter.widgets.editableText.cursorWidth}
+  final double cursorWidth;
+
+  /// {@macro flutter.widgets.editableText.cursorHeight}
+  final double? cursorHeight;
+
+  /// {@macro flutter.widgets.scrollable.dragStartBehavior}
+  final DragStartBehavior dragStartBehavior;
+
+  /// {@macro flutter.widgets.editableText.enableInteractiveSelection}
+  final bool enableInteractiveSelection;
+
+  /// Defines the focus for this widget.
+  ///
+  /// Math is only selectable when widget is focused.
+  ///
+  /// The [focusNode] is a long-lived object that's typically managed by a
+  /// [StatefulWidget] parent. See [FocusNode] for more information.
+  ///
+  /// To give the focus to this widget, provide a [focusNode] and then
+  /// use the current [FocusScope] to request the focus:
+  ///
+  /// ```dart
+  /// FocusScope.of(context).requestFocus(myFocusNode);
+  /// ```
+  ///
+  /// This happens automatically when the widget is tapped.
+  ///
+  /// To be notified when the widget gains or loses the focus, add a listener
+  /// to the [focusNode]:
+  ///
+  /// ```dart
+  /// focusNode.addListener(() { print(myFocusNode.hasFocus); });
+  /// ```
+  ///
+  /// If null, this widget will create its own [FocusNode].
+  final FocusNode? focusNode;
+
+  /// {@macro flutter_equation_support.widgets.math.mathStyle}
+  final MathStyle mathStyle;
+
+  /// {@macro flutter_equation_support.widgets.math.logicalPpi}
+  final double? logicalPpi;
+
+  /// {@macro flutter_equation_support.widgets.math.onErrorFallback}
+  final OnErrorFallback onErrorFallback;
+
+  /// {@macro flutter_equation_support.widgets.math.options}
+  final MathOptions? options;
+
+  /// {@macro flutter_equation_support.widgets.math.parseError}
+  final ParseException? parseException;
+
+  /// {@macro flutter.widgets.editableText.showCursor}
+  final bool showCursor;
+
+  /// {@macro flutter.widgets.editableText.textScaleFactor}
+  final double? textScaleFactor;
+
+  /// Optional delegate for building the text selection handles and toolbar.
+  ///
+  /// Just works like [EditableText.selectionControls]
+  final TextSelectionControls? textSelectionControls;
+
+  /// {@macro fluttermath.widgets.math.textStyle}
+  final TextStyle? textStyle;
+
+  /// Configuration of toolbar options.
+  ///
+  /// Paste and cut will be disabled regardless.
+  ///
+  /// If not set, select all and copy will be enabled by default.
+  final MathToolbarOptions toolbarOptions;
+
+  /// SelectableMath builder using a TeX string
+  ///
+  /// {@macro flutter_equation_support.widgets.math.tex_builder}
+  ///
+  /// See alse:
+  ///
+  /// * [SelectableMath.mathStyle]
+  /// * [SelectableMath.textStyle]
+  factory SelectableMath.tex(
+    String expression, {
+    Key? key,
+    TexParserSettings settings = const TexParserSettings(),
+    MathOptions? options,
+    OnErrorFallback onErrorFallback = defaultOnErrorFallback,
+    bool autofocus = false,
+    Color? cursorColor,
+    Radius? cursorRadius,
+    double cursorWidth = 2.0,
+    double? cursorHeight,
+    DragStartBehavior dragStartBehavior = DragStartBehavior.start,
+    bool enableInteractiveSelection = true,
+    FocusNode? focusNode,
+    MathStyle mathStyle = MathStyle.display,
+    double? logicalPpi,
+    bool showCursor = false,
+    double? textScaleFactor,
+    TextSelectionControls? textSelectionControls,
+    TextStyle? textStyle,
+    MathToolbarOptions? toolbarOptions,
+  }) {
+    SyntaxTree? ast;
+    ParseException? parseError;
+    try {
+      ast = SyntaxTree(greenRoot: TexParser(expression, settings).parse());
+    } on ParseException catch (e) {
+      parseError = e;
+    } on Object catch (e) {
+      parseError = ParseException(
+        'Unsanitized parse exception detected: $e.'
+        'Please report this error with correponding input.',
+      );
+    }
+    return SelectableMath(
+      key: key,
+      ast: ast,
+      autofocus: autofocus,
+      cursorColor: cursorColor,
+      cursorRadius: cursorRadius,
+      cursorWidth: cursorWidth,
+      cursorHeight: cursorHeight,
+      dragStartBehavior: dragStartBehavior,
+      enableInteractiveSelection: enableInteractiveSelection,
+      focusNode: focusNode,
+      mathStyle: mathStyle,
+      logicalPpi: logicalPpi,
+      onErrorFallback: onErrorFallback,
+      options: options,
+      parseException: parseError,
+      showCursor: showCursor,
+      textScaleFactor: textScaleFactor,
+      textSelectionControls: textSelectionControls,
+      textStyle: textStyle,
+      toolbarOptions: toolbarOptions,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (parseException != null) {
+      return onErrorFallback(parseException!);
+    }
+
+    var effectiveTextStyle = textStyle;
+    if (effectiveTextStyle == null || effectiveTextStyle.inherit) {
+      effectiveTextStyle = DefaultTextStyle.of(context).style.merge(textStyle);
+    }
+    if (MediaQuery.boldTextOf(context)) {
+      effectiveTextStyle = effectiveTextStyle.merge(
+        const TextStyle(fontWeight: FontWeight.bold),
+      );
+    }
+
+    final textScaler = textScaleFactor != null
+        ? TextScaler.linear(textScaleFactor!)
+        : MediaQuery.textScalerOf(context);
+
+    final options =
+        this.options ??
+        MathOptions(
+          style: mathStyle,
+          fontSize: textScaler.scale(effectiveTextStyle.fontSize!),
+          mathFontOptions:
+              effectiveTextStyle.fontWeight != FontWeight.normal &&
+                  effectiveTextStyle.fontWeight != null
+              ? FontOptions(fontWeight: effectiveTextStyle.fontWeight!)
+              : null,
+          logicalPpi: logicalPpi,
+          color: effectiveTextStyle.color!,
+          fontFamilyFallback: fallbackFamiliesOf(effectiveTextStyle),
+        );
+
+    // A trial build to catch any potential build errors
+    try {
+      ast!.buildWidget(options);
+    } on BuildException catch (e) {
+      return onErrorFallback(e);
+    } on Object catch (e) {
+      return onErrorFallback(
+        BuildException(
+          'Unsanitized build exception detected: $e.'
+          'Please report this error with correponding input.',
+        ),
+      );
+    }
+
+    final theme = Theme.of(context);
+    // The following code adapts for Flutter's new theme system (https://github.com/flutter/flutter/pull/62014/)
+    final selectionTheme = TextSelectionTheme.of(context);
+
+    var textSelectionControls = this.textSelectionControls;
+    bool paintCursorAboveText;
+    bool cursorOpacityAnimates;
+    Offset? cursorOffset;
+    var cursorColor = this.cursorColor;
+    Color selectionColor;
+    var cursorRadius = this.cursorRadius;
+    bool forcePressEnabled;
+
+    switch (theme.platform) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+        forcePressEnabled = true;
+        textSelectionControls ??= cupertinoTextSelectionControls;
+        paintCursorAboveText = true;
+        cursorOpacityAnimates = true;
+        cursorColor ??=
+            selectionTheme.cursorColor ??
+            CupertinoTheme.of(context).primaryColor;
+        selectionColor =
+            selectionTheme.selectionColor ??
+            CupertinoTheme.of(context).primaryColor;
+
+        cursorRadius ??= const Radius.circular(2.0);
+        cursorOffset = Offset(
+          iOSHorizontalOffset / MediaQuery.of(context).devicePixelRatio,
+          0,
+        );
+        break;
+
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+        forcePressEnabled = false;
+        textSelectionControls ??= materialTextSelectionControls;
+        paintCursorAboveText = false;
+        cursorOpacityAnimates = false;
+        cursorColor ??= selectionTheme.cursorColor ?? theme.colorScheme.primary;
+        selectionColor =
+            selectionTheme.selectionColor ?? theme.colorScheme.primary;
+
+        break;
+    }
+
+    return RepaintBoundary(
+      child: InternalSelectableMath(
+        ast: ast!,
+        autofocus: autofocus,
+        cursorColor: cursorColor,
+        cursorOffset: cursorOffset,
+        cursorOpacityAnimates: cursorOpacityAnimates,
+        cursorRadius: cursorRadius,
+        cursorWidth: cursorWidth,
+        cursorHeight: cursorHeight,
+        dragStartBehavior: dragStartBehavior,
+        enableInteractiveSelection: enableInteractiveSelection,
+        focusNode: focusNode,
+        forcePressEnabled: forcePressEnabled,
+        options: options,
+        paintCursorAboveText: paintCursorAboveText,
+        selectionColor: selectionColor,
+        showCursor: showCursor,
+        textSelectionControls: textSelectionControls,
+        toolbarOptions: toolbarOptions,
+      ),
+    );
+  }
+
+  /// Default fallback function for [Math], [SelectableMath]
+  static Widget defaultOnErrorFallback(FlutterMathException error) =>
+      Math.defaultOnErrorFallback(error);
+}
+
+/// The internal widget for [SelectableMath] when no errors are encountered.
+class InternalSelectableMath extends StatefulWidget {
+  const InternalSelectableMath({
+    super.key,
+    required this.ast,
+    this.autofocus = false,
+    required this.cursorColor,
+    this.cursorOffset,
+    this.cursorOpacityAnimates = false,
+    this.cursorRadius,
+    this.cursorWidth = 2.0,
+    this.cursorHeight,
+    this.dragStartBehavior = DragStartBehavior.start,
+    this.enableInteractiveSelection = true,
+    this.forcePressEnabled = false,
+    this.focusNode,
+    this.hintingColor,
+    required this.options,
+    this.paintCursorAboveText = false,
+    this.selectionColor,
+    this.showCursor = false,
+    required this.textSelectionControls,
+    required this.toolbarOptions,
+  });
+
+  final SyntaxTree ast;
+
+  final bool autofocus;
+
+  final Color cursorColor;
+
+  final Offset? cursorOffset;
+
+  final bool cursorOpacityAnimates;
+
+  final Radius? cursorRadius;
+
+  final double cursorWidth;
+
+  final double? cursorHeight;
+
+  final DragStartBehavior dragStartBehavior;
+
+  final bool enableInteractiveSelection;
+
+  final FocusNode? focusNode;
+
+  final bool forcePressEnabled;
+
+  final Color? hintingColor;
+
+  final MathOptions options;
+
+  final bool paintCursorAboveText;
+
+  final Color? selectionColor;
+
+  final bool showCursor;
+
+  final TextSelectionControls textSelectionControls;
+
+  final MathToolbarOptions toolbarOptions;
+
+  @override
+  InternalSelectableMathState createState() => InternalSelectableMathState();
+}
+
+class InternalSelectableMathState extends State<InternalSelectableMath>
+    with
+        AutomaticKeepAliveClientMixin,
+        FocusManagerMixin,
+        SelectionManagerMixin,
+        SelectionOverlayManagerMixin,
+        WebSelectionControlsManagerMixin,
+        SingleTickerProviderStateMixin,
+        CursorTimerManagerMixin {
+  @override
+  TextSelectionControls get textSelectionControls =>
+      widget.textSelectionControls;
+
+  FocusNode? _focusNode;
+
+  @override
+  FocusNode get focusNode => widget.focusNode ?? (_focusNode ??= FocusNode());
+
+  @override
+  bool get showCursor => widget.showCursor; //?? false;
+
+  @override
+  bool get cursorOpacityAnimates => widget.cursorOpacityAnimates;
+
+  @override
+  DragStartBehavior get dragStartBehavior => widget.dragStartBehavior;
+
+  @override
+  late MathController controller;
+
+  late FocusNode _oldFocusNode;
+
+  @override
+  void initState() {
+    controller = MathController(ast: widget.ast);
+    _oldFocusNode = focusNode..addListener(updateKeepAlive);
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(InternalSelectableMath oldWidget) {
+    if (widget.ast != controller.ast) {
+      controller = MathController(ast: widget.ast);
+    }
+    if (_oldFocusNode != focusNode) {
+      _oldFocusNode.removeListener(updateKeepAlive);
+      _oldFocusNode = focusNode..addListener(updateKeepAlive);
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  bool _didAutoFocus = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didAutoFocus && widget.autofocus) {
+      _didAutoFocus = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          FocusScope.of(context).autofocus(widget.focusNode!);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _oldFocusNode.removeListener(updateKeepAlive);
+    super.dispose();
+    controller.dispose();
+  }
+
+  @override
+  void onSelectionChanged(
+    TextSelection selection,
+    SelectionChangedCause? cause,
+  ) {
+    switch (Theme.of(context).platform) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+        if (cause == SelectionChangedCause.longPress) {
+          bringIntoView(selection.base);
+        }
+        return;
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+      // Do nothing.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // See AutomaticKeepAliveClientMixin.
+
+    final child = controller.ast.buildWidget(widget.options);
+
+    return selectionGestureDetectorBuilder.buildGestureDetector(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.text,
+        child: MathScope(
+          mode: FlutterMathMode.select,
+          controller: controller,
+          selectionStyle: SelectionStyle(
+            cursorColor: widget.cursorColor,
+            cursorOffset: widget.cursorOffset,
+            cursorRadius: widget.cursorRadius,
+            cursorWidth: widget.cursorWidth,
+            cursorHeight: widget.cursorHeight,
+            selectionColor: widget.selectionColor,
+            paintCursorAboveText: widget.paintCursorAboveText,
+          ),
+          handleLayerLinks: (startHandleLayerLink, endHandleLayerLink),
+          cursorBlinkOpacityController: cursorBlinkOpacityController,
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => hasFocus;
+
+  @override
+  bool get copyEnabled => widget.toolbarOptions.copy;
+
+  @override
+  bool get cutEnabled => false;
+
+  @override
+  bool get pasteEnabled => false;
+
+  @override
+  bool get selectAllEnabled => widget.toolbarOptions.selectAll;
+
+  @override
+  List<ContextMenuButtonItem> get contextMenuButtonItems => [
+    if (copyEnabled && !controller.selection.isCollapsed)
+      ContextMenuButtonItem(
+        type: ContextMenuButtonType.copy,
+        onPressed: () => copySelection(SelectionChangedCause.toolbar),
+      ),
+    if (selectAllEnabled && !_isAllSelected)
+      ContextMenuButtonItem(
+        type: ContextMenuButtonType.selectAll,
+        onPressed: () => selectAll(SelectionChangedCause.toolbar),
+      ),
+  ];
+
+  int get _lastCaret => controller.ast.greenRoot.capturedCursor - 1;
+
+  bool get _isAllSelected =>
+      controller.selection.start == 0 && controller.selection.end == _lastCaret;
+
+  /// Copies the selected part of the equation to the clipboard as TeX.
+  @override
+  void copySelection(SelectionChangedCause cause) {
+    if (!copyEnabled || controller.selection.isCollapsed) return;
+    Clipboard.setData(
+      ClipboardData(text: controller.selectedNodes.encodeTex()),
+    );
+    if (cause == SelectionChangedCause.toolbar) hideToolbar(false);
+  }
+
+  @override
+  void selectAll(SelectionChangedCause cause) {
+    if (!selectAllEnabled) return;
+    handleSelectionChanged(
+      TextSelection(baseOffset: 0, extentOffset: _lastCaret),
+      cause,
+    );
+    if (cause == SelectionChangedCause.toolbar) showToolbar();
+  }
+
+  static const _copyShortcuts = [
+    SingleActivator(LogicalKeyboardKey.keyC, control: true),
+    SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+    SingleActivator(LogicalKeyboardKey.copy),
+  ];
+
+  static const _selectAllShortcuts = [
+    SingleActivator(LogicalKeyboardKey.keyA, control: true),
+    SingleActivator(LogicalKeyboardKey.keyA, meta: true),
+  ];
+
+  @override
+  KeyEventResult handleKeyEvent(FocusNode node, KeyEvent event) {
+    final keyboard = HardwareKeyboard.instance;
+    if (_copyShortcuts.any((s) => s.accepts(event, keyboard))) {
+      if (!copyEnabled || controller.selection.isCollapsed) {
+        return KeyEventResult.ignored;
+      }
+      copySelection(SelectionChangedCause.keyboard);
+      return KeyEventResult.handled;
+    }
+    if (_selectAllShortcuts.any((s) => s.accepts(event, keyboard))) {
+      if (!selectAllEnabled) return KeyEventResult.ignored;
+      selectAll(SelectionChangedCause.keyboard);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  bool get forcePressEnabled => widget.forcePressEnabled;
+
+  @override
+  bool get selectionEnabled => widget.enableInteractiveSelection;
+
+  @override
+  double get preferredLineHeight => widget.options.fontSize;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    // We override noSuchMethod since we do not have concrete implementations
+    // for all methods of the selection manager mixins.
+    throw NoSuchMethodError.withInvocation(this, invocation);
+  }
+}
+
+/// Which actions the selection toolbar of a [SelectableMath] offers.
+///
+/// Replaces Flutter's deprecated `ToolbarOptions`. Cut and paste never apply
+/// to a read-only equation.
+@immutable
+class MathToolbarOptions {
+  /// Offer copying the selection (as TeX).
+  final bool copy;
+
+  /// Offer selecting the whole equation.
+  final bool selectAll;
+
+  const MathToolbarOptions({this.copy = true, this.selectAll = true});
+
+  @override
+  bool operator ==(Object other) =>
+      other is MathToolbarOptions &&
+      other.copy == copy &&
+      other.selectAll == selectAll;
+
+  @override
+  int get hashCode => Object.hash(copy, selectAll);
+}
+
+class SelectionStyle {
+  final Color cursorColor;
+  final Offset? cursorOffset;
+  final Radius? cursorRadius;
+  final double cursorWidth;
+  final double? cursorHeight;
+  final Color? hintingColor;
+  final bool paintCursorAboveText;
+  final Color? selectionColor;
+  final bool showCursor;
+
+  const SelectionStyle({
+    required this.cursorColor,
+    this.cursorOffset,
+    this.cursorRadius,
+    this.cursorWidth = 1.0,
+    this.cursorHeight,
+    this.hintingColor,
+    this.paintCursorAboveText = false,
+    this.selectionColor,
+    this.showCursor = false,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is SelectionStyle &&
+        other.cursorColor == cursorColor &&
+        other.cursorOffset == cursorOffset &&
+        other.cursorRadius == cursorRadius &&
+        other.cursorWidth == cursorWidth &&
+        other.cursorHeight == cursorHeight &&
+        other.hintingColor == hintingColor &&
+        other.paintCursorAboveText == paintCursorAboveText &&
+        other.selectionColor == selectionColor &&
+        other.showCursor == showCursor;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    cursorColor,
+    cursorOffset,
+    cursorRadius,
+    cursorWidth,
+    cursorHeight,
+    hintingColor,
+    paintCursorAboveText,
+    selectionColor,
+    showCursor,
+  );
+}
