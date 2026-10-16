@@ -1,9 +1,50 @@
 flutter_equation_support
 
-The math engine in lib/src/ and lib/katex_fonts/ is derived from flutter_math
-(https://github.com/znjameswu/flutter_math) via flutter_math_fork 0.7.4
-(https://github.com/simpleclub/flutter_math), licensed under the Apache
-License 2.0 (see LICENSE). Modified by the flutter_equation_support authors.
+The math engine in lib/src/ (ast, parser, render, encoder, widgets, utils) was
+originally derived from flutter_math (https://github.com/znjameswu/flutter_math)
+by way of flutter_math_fork 0.7.4 (https://github.com/simpleclub/flutter_math),
+licensed under the Apache License 2.0 (see LICENSE). It has since been
+substantially modified by the flutter_equation_support authors, including a
+port to KaTeX 0.19.0.
 
-The KaTeX fonts in lib/katex_fonts/fonts/ are from KaTeX
-(https://github.com/KaTeX/KaTeX), licensed under the MIT License (see lib/katex_fonts/LICENSE).
+Parts of the parser, macro expander, environments, SVG geometry, symbol tables
+and the generated font metrics are ported from KaTeX
+(https://github.com/KaTeX/KaTeX), Copyright (c) 2013-2020 Khan Academy and
+other contributors, licensed under the MIT License (see
+lib/katex_fonts/LICENSE).
+
+The KaTeX fonts in lib/katex_fonts/fonts/ are from KaTeX 0.19.0, licensed
+under the MIT License (see lib/katex_fonts/LICENSE).
+
+The Noto Sans Bengali fonts in lib/fonts/noto_sans_bengali/ are Copyright 2022
+The Noto Project Authors, licensed under the SIL Open Font License 1.1 (see
+lib/fonts/noto_sans_bengali/OFL.txt).
+
+lib/src/html/html_list.dart is ported from flutter_widget_from_html_core
+0.17.4 (https://github.com/daohoangson/flutter_widget_from_html),
+Copyright (c) 2020 Dao Hoang Son, licensed under the MIT License:
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+
+The layout of lib/src/html/html_view.dart follows the default stylesheet of
+the same package, so that content keeps its look.
+
+The HTML entity table in lib/src/html/html_entities.dart is generated from
+the WHATWG HTML Standard's entities.json (https://html.spec.whatwg.org/),
+licensed under CC BY 4.0.

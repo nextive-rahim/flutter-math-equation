@@ -1,5 +1,5 @@
 name: flutter_equation_support
-description: TeX/LaTeX math and HTML equation rendering for Flutter, with Bengali support. Engine forked from flutter_math (Apache-2.0).
+description: TeX/LaTeX math and HTML-with-equations rendering for Flutter, KaTeX 0.19 compatible, with Bengali support.
 version: 0.1.0
 publish_to: none
 

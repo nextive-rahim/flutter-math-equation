@@ -10,6 +10,14 @@ import '../html/html_view.dart';
 import '../widgets/math.dart';
 import 'theme.dart';
 
+// Moved from the e-testpaper app, where it rendered maths with an earlier
+// third-party KaTeX port and HTML with a third-party HTML widget. Several
+// workarounds below (lifting Bangla out of `$…$`, keeping Bengali digits,
+// rewriting `\AA`) were written for that engine's limits; this package's
+// engine shapes Bengali inside maths and defines `\AA`, but the pipeline is
+// kept as tuned so that rendering does not change. "Math.tex" in the notes
+// is the KaTeX fallback path.
+
 /// Default body text style used by [MathRender] / [EquationSolver] when the
 /// caller does not pass an explicit `style:`. Tweaked for a more polished
 /// look — Bengali typography, gentle line-height, richer near-black/-white.
@@ -26,10 +34,10 @@ TextStyle _defaultMathTextStyle(BuildContext context, {required bool isDark}) {
   );
 }
 
-// The style to hand flutter_math, derived from the prose style around the
+// The style to hand Math.tex, derived from the prose style around the
 // equation so a formula sits in a sentence without changing weight or size.
 //
-// flutter_math draws with the KaTeX fonts, which ship a Regular and a Bold face
+// Math.tex draws with the KaTeX fonts, which ship a Regular and a Bold face
 // and nothing between: `MathOptions` reaches for the Bold file on
 // `FontWeight.bold` exactly, so every other weight silently falls back to
 // Regular. The question and option text run at w600 / w500, so as written every
@@ -93,7 +101,7 @@ bool hasTable(String html) {
 //     দেওয়া আছে,
 //     a = 1 + √3
 //
-// HtmlWidget treats `\n` as ordinary whitespace, so every one of those
+// HtmlView treats `\n` as ordinary whitespace, so every one of those
 // step-by-step solutions collapsed into a single running paragraph. The
 // [EquationSolver] path already splits on `\n`, so only the plain-HTML path
 // needed this — which is why the bug only showed on bodies with no `$…$`.
@@ -117,7 +125,7 @@ String applySourceLineBreaks(String source) {
   var text = source;
   // With no tags at all this is plain text, so `<`, `>` and `&` are content
   // (`a < b` is a comparison, not the start of an element) and must be escaped
-  // before HtmlWidget sees them.
+  // before HtmlView sees them.
   if (!_anyHtmlTag.hasMatch(text)) {
     text = const HtmlEscape().convert(text);
   }
@@ -192,7 +200,7 @@ int get _imageDecodeWidth {
 final Map<String, bool> _needsSolverCache = <String, bool>{};
 
 /// Whether a body carries maths or a table, and so must go through
-/// [EquationSolver] rather than plain [HtmlWidget].
+/// [EquationSolver] rather than plain [HtmlView].
 bool _needsSolver(String html) {
   final cached = _recall(_needsSolverCache, html);
   if (cached != null) return cached;
@@ -245,7 +253,7 @@ class MathRender extends StatelessWidget {
       );
     }
 
-    // 🔥 Strip inline colors in dark mode so HtmlWidget respects textStyle
+    // 🔥 Strip inline colors in dark mode so HtmlView respects textStyle
     String html = applySourceLineBreaks(htmlContent);
     if (isDark) {
       // Remove color from style attributes: style="color: #000; ..." → style="..."
@@ -264,7 +272,7 @@ class MathRender extends StatelessWidget {
       html = html.replaceAll(RegExp(r'</font>', caseSensitive: false), '');
     }
 
-    // 🔥 If no equation → use HtmlWidget
+    // 🔥 If no equation → use HtmlView
     return HtmlView(
       html,
       textStyle: style ?? _defaultMathTextStyle(context, isDark: isDark),
@@ -351,7 +359,7 @@ class EquationSolver extends StatelessWidget {
     html = _convertMathMLToLatex(html);
     html = _restoreLatex(html, mathMap);
 
-    // Bangla embedded inside $...$ can't be shaped by flutter_math; lift it out
+    // Bangla embedded inside $...$ can't be shaped by Math.tex; lift it out
     // as ordinary text (and normalize trapped digits) so it renders correctly.
     html = _pullBengaliOutOfMath(html);
 
@@ -488,7 +496,7 @@ class EquationSolver extends StatelessWidget {
   // ---------------------------------------------------------------------------
   // BANGLA-INSIDE-MATH REPAIR
   // ---------------------------------------------------------------------------
-  // flutter_math cannot shape Bangla letters in math mode, so any Bangla that
+  // Math.tex cannot shape Bangla letters in math mode, so any Bangla that
   // authors embedded INSIDE a `$...$` (e.g. `\text{ এর ক্রয়মূল্য}`, raw
   // `$১৬√২$`) renders garbled. This lifts top-level Bangla — `\text{...}` groups
   // and raw Bangla runs — OUT of the equation as ordinary text (which RichText
@@ -510,18 +518,18 @@ class EquationSolver extends StatelessWidget {
       // Normalise LaTeX operator/relation commands (`\times`, `\therefore`, …) to
       // their Unicode glyphs so the plain-number and fraction checks below treat
       // them as ordinary symbols rather than markup that forces the English math
-      // path. The original (un-normalised) form is kept for the flutter_math
+      // path. The original (un-normalised) form is kept for the Math.tex
       // fallback, which needs the LaTeX commands.
       final inner = _normalizeSimpleOps(stripped);
       // A text-renderable expression — plain numbers, arithmetic, or algebra with
       // Bengali variables (`$১৬$`, `$০.৫$`, `$১২ + ৩$`, `$∴ ০.৪৭$`, `$∴ ক = ৯০$`) —
       // has no real math structure (no `\frac`, roots, sub/superscripts), yet
-      // flutter_math would convert its Bengali digits to English. Keep it as plain
+      // Math.tex would convert its Bengali digits to English. Keep it as plain
       // text so the Bengali digits survive.
       if (_isSimpleFracCell(inner)) return inner;
       // A simple numeric/algebraic fraction expression — `\frac{২×২×২}{১×৪×১০০০}`,
       // `∴ ০.৪৭ = \frac{৪৭ - ৪}{৯০} = \frac{৪৩}{৯০}` — is drawn with a custom
-      // fraction widget so its Bengali digits survive (flutter_math would convert
+      // fraction widget so its Bengali digits survive (Math.tex would convert
       // them to English).
       final frac = _tryRenderSimpleFrac(inner);
       if (frac != null) return frac;
@@ -533,7 +541,7 @@ class EquationSolver extends StatelessWidget {
       if (asText != null) return asText;
       // Real structure that must still keep its Bengali digits — roots, nested
       // fractions (`$\sqrt{৬২৫} = ২৫$`, `$\frac{\sqrt{২৮৯}}{\sqrt{৩৬১}}$`) — is
-      // drawn by the Bengali-safe math widget instead of flutter_math.
+      // drawn by the Bengali-safe math widget instead of Math.tex.
       final asWidget = _tryRenderMathWidget(inner);
       if (asWidget != null) return asWidget;
       return _rewriteBengaliMath(stripped);
@@ -580,7 +588,7 @@ class EquationSolver extends StatelessWidget {
   // tokens (drawn as real stacked fractions) with the plain parts left as text —
   // all keeping their Bengali digits. Returns null when it hits anything that
   // isn't a simple fraction/number (variables, roots, nested non-numeric groups)
-  // so those fall back to the flutter_math path.
+  // so those fall back to the Math.tex path.
   String? _tryRenderSimpleFrac(String inner) {
     if (!inner.contains(r'\frac')) return null;
     // Normalise LaTeX operator commands (`\times`, `\div`, …) to their Unicode
@@ -616,7 +624,7 @@ class EquationSolver extends StatelessWidget {
       final ch = inner[i];
       // Simple operators/digits and raw Bengali (letters like the variable `ক`,
       // digits) pass through as text; anything else (LaTeX commands, `^`, `_`)
-      // means real math → bail so the flutter_math path handles it.
+      // means real math → bail so the Math.tex path handles it.
       if (!_isSimpleMathChar(ch) && !_isBengali(ch.codeUnitAt(0))) return null;
       out.write(ch);
       i++;
@@ -626,7 +634,7 @@ class EquationSolver extends StatelessWidget {
 
   // An expression whose only "structure" is a sub/superscript, an italic variable
   // or a numeric fraction — `(৪+৫+৩)^২ = ?`, `x^২ + ২৫x - ৭৫০০ = ০`, `a=১, b=২` —
-  // needs no math engine, yet flutter_math would convert its Bengali digits to
+  // needs no math engine, yet Math.tex would convert its Bengali digits to
   // English, and the Bengali fallback in [_rewriteBengaliMath] would split it into
   // broken `$…$` fragments (leaving a dangling `^` and dropping the exponent onto
   // the baseline). Rewrite it as plain text with the `__SUP__` / `__SUB__` /
@@ -722,13 +730,13 @@ class EquationSolver extends StatelessWidget {
   // Expressions that keep real structure but must also keep their Bengali digits —
   // `\sqrt{৬২৫} = ২৫`, `\sqrt[3]{১২৫}`, `\frac{\sqrt{২৮৯}}{\sqrt{৩৬১}}`,
   // `\sqrt{৪১ - \sqrt{২১ + \sqrt{৯}}}`, `(\frac{১}{১০০})^২` — can go to neither
-  // path above: flutter_math draws their Bengali digits as English, and they can't
+  // path above: Math.tex draws their Bengali digits as English, and they can't
   // be flattened into the text markers (those can't nest). They are drawn instead
   // by a small renderer of our own — radicals, fractions and scripts built from
   // the app's font, so every Bengali digit survives. The `$...$` becomes a
   // `__BMATH__…__/BMATH__` token carrying the LaTeX, which [_buildMathWidget]
   // parses again at paint time. Returns null when the expression uses something
-  // the renderer doesn't know, so it keeps the existing flutter_math fallback.
+  // the renderer doesn't know, so it keeps the existing Math.tex fallback.
   String? _tryRenderMathWidget(String inner) {
     final atoms = _parseMathAtoms(inner);
     if (atoms == null || atoms.isEmpty) return null;
@@ -750,7 +758,7 @@ class EquationSolver extends StatelessWidget {
 
   // Parses [src] into the atoms the renderer can draw, or null for anything it
   // doesn't know (an unknown `\command`, unbalanced braces, a stray symbol) — the
-  // caller then keeps the flutter_math path rather than mis-drawing the equation.
+  // caller then keeps the Math.tex path rather than mis-drawing the equation.
   List<_MathAtom>? _parseMathAtoms(String src) {
     return _parseAtomSeq(_normalizeSimpleOps(src));
   }
@@ -852,7 +860,7 @@ class EquationSolver extends StatelessWidget {
       // Authors write the brace apart from the command — `\text { পরিসর }` —
       // and `\frac` above already skips that space. Doing the same here keeps
       // `\frac{\text {…}}{\text {…}}` on this path; matching only `\text{` bailed
-      // to flutter_math, which cannot shape the Bangla this branch exists to
+      // to Math.tex, which cannot shape the Bangla this branch exists to
       // keep. `-1` when the brace never arrives, so `\textbf{…}` and friends
       // still fall through to the handling they had.
       final textOpen = s.startsWith(r'\text', i) ? _skipSpaces(s, i + 5) : -1;
@@ -867,7 +875,7 @@ class EquationSolver extends StatelessWidget {
       // stops LaTeX reading them as a group. Drawing them keeps expressions like
       // `\{(১২ \div ৩) \times ২\}^৩` on this Bengali-safe path; without it the
       // `\` fell through to the bail below and the equation dropped to the
-      // flutter_math fallback, which cannot keep Bengali digits.
+      // Math.tex fallback, which cannot keep Bengali digits.
       if (s.startsWith(r'\{', i) || s.startsWith(r'\}', i)) {
         out.add(_MathRun(s[i + 1], false));
         i += 2;
@@ -916,7 +924,7 @@ class EquationSolver extends StatelessWidget {
       }
       // A `\command` the renderer knows as one glyph (`\circ`, `\to`, `\Delta`)
       // or as pure spacing (`\,`, `\quad`) is drawn here; every other command
-      // still bails so the equation keeps the flutter_math path.
+      // still bails so the equation keeps the Math.tex path.
       if (ch == r'\') {
         final symbol = _readSymbolCommand(s, i);
         if (symbol == null) return null;
@@ -925,7 +933,7 @@ class EquationSolver extends StatelessWidget {
         continue;
       }
       // A stray closing brace / bracket — bail so the equation keeps the
-      // flutter_math path.
+      // Math.tex path.
       if (ch == '}' || ch == '[' || ch == ']') return null;
       if (_isAsciiLetter(ch)) {
         final start = i;
@@ -972,18 +980,18 @@ class EquationSolver extends StatelessWidget {
   // This renderer exists to keep Bengali digits, so it draws with the prose
   // font — which also put the Latin letters beside them (`X`, `Y`, `Enzyme`,
   // `H₂O`) in that font, while the same letters in an all-Latin equation come
-  // from flutter_math's KaTeX faces. Side by side (`… X → Y` above `i. Y …`)
+  // from Math.tex's KaTeX faces. Side by side (`… X → Y` above `i. Y …`)
   // they read as two different typefaces. Latin letters and ASCII digits are
-  // therefore drawn in the KaTeX face flutter_math would pick for them —
+  // therefore drawn in the KaTeX face Math.tex would pick for them —
   // Main for upright text, Math-Italic for variables — at the same size and
-  // weight [_katexTextStyle] gives flutter_math. Bengali and operators keep
+  // weight [_katexTextStyle] gives Math.tex. Bengali and operators keep
   // the prose font, exactly as before.
   List<InlineSpan> _latinAwareSpans(String text, TextStyle style, bool italic) {
     final prose = italic ? style.copyWith(fontStyle: FontStyle.italic) : style;
     final katex = _katexTextStyle(style).copyWith(
       fontFamily: italic
-          ? 'packages/flutter_math_fork/KaTeX_Math'
-          : 'packages/flutter_math_fork/KaTeX_Main',
+          ? 'packages/flutter_equation_support/KaTeX_Math'
+          : 'packages/flutter_equation_support/KaTeX_Main',
       fontStyle: italic ? FontStyle.italic : FontStyle.normal,
       fontFamilyFallback: [if (style.fontFamily != null) style.fontFamily!],
     );
@@ -1092,7 +1100,7 @@ class EquationSolver extends StatelessWidget {
   // ---------------------------------------------------------------------------
   // Environments that are a plain grid of cells. The delimited ones (`pmatrix`,
   // `cases`, …) are deliberately absent: they need stretched brackets this
-  // renderer doesn't draw, so they keep the flutter_math path they have today.
+  // renderer doesn't draw, so they keep the Math.tex path they have today.
   static const Set<String> _gridEnvironments = {
     'array',
     'subarray',
@@ -1105,7 +1113,7 @@ class EquationSolver extends StatelessWidget {
   /// Parses `\begin{name}[{colspec}] body \end{name}` starting at [i], returning
   /// the environment atom and the index just past its `\end{…}`. Null for an
   /// environment this renderer doesn't draw, or a malformed one — the caller then
-  /// bails the whole expression to flutter_math.
+  /// bails the whole expression to Math.tex.
   ({_MathAtom atom, int end})? _parseEnvironment(String s, int i) {
     final nameEnd = s.indexOf('}', i + 7);
     if (nameEnd < 0) return null;
@@ -1540,7 +1548,7 @@ class EquationSolver extends StatelessWidget {
   }
 
   // Draws a stacked numerator-over-denominator fraction with a rule between —
-  // Bengali digits kept intact (unlike flutter_math). [IntrinsicWidth] makes the
+  // Bengali digits kept intact (unlike Math.tex). [IntrinsicWidth] makes the
   // rule span the wider of the two rows.
   Widget _fractionWidget(
     String numerator,
@@ -1792,7 +1800,7 @@ class EquationSolver extends StatelessWidget {
           latex,
           bold ? style.copyWith(fontWeight: FontWeight.bold) : style,
         );
-        // Same rule as the flutter_math span above: only a construct too wide for
+        // Same rule as the Math.tex span above: only a construct too wide for
         // the screen gets its own horizontal scroll, so the prose around it keeps
         // wrapping instead of being dragged off-screen with the equation.
         spans.add(
@@ -2515,7 +2523,7 @@ class EquationSolver extends StatelessWidget {
     latex = latex.replaceAll(r'\left\{', r'\left(');
     latex = latex.replaceAll(r'\right\}', r'\right)');
     latex = latex.replaceAll(r'\re', r'\mathrm{Re}');
-    // flutter_math_fork leaves KaTeX's `\AA` macro undefined, so an Ångström
+    // the previous engine leaves KaTeX's `\AA` macro undefined, so an Ångström
     // unit (`1025.73\,\AA`) failed the whole expression with "Undefined
     // control sequence". Spell it out with the ring accent the engine has.
     latex = latex.replaceAllMapped(

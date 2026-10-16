@@ -215,9 +215,18 @@ class MathOptions {
 
   /// Returns [MathOptions] with current text-mode font options merged with
   /// given font differences
-  MathOptions withTextFont(PartialFontOptions font) => copyWith(
-    mathFontOptions: null,
+  ///
+  /// Like KaTeX's `withTextFontFamily` and friends, this also drops the math
+  /// font, so `\mathbf{\text{$x$}}` sets the inner x in the normal math font.
+  MathOptions withTextFont(PartialFontOptions font) => MathOptions._(
+    fontSize: fontSize,
+    logicalPpi: logicalPpi,
+    style: style,
+    color: color,
+    sizeUnderTextStyle: sizeUnderTextStyle,
     textFontOptions: (textFontOptions ?? FontOptions()).mergeWith(font),
+    mathFontOptions: null,
+    fontFamilyFallback: fontFamilyFallback,
   );
 
   /// Returns [MathOptions] with given math font
