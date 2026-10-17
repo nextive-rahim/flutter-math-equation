@@ -6,7 +6,7 @@ import '../ast/syntax_tree.dart';
 /// Font family bundled with this package for complex scripts (Bengali). Used
 /// as the last fallback, after any family the caller's text style names.
 const String bundledComplexScriptFontFamily =
-    'packages/flutter_equation_support/NotoSansBengali';
+    'packages/flutter_math_equation/NotoSansBengali';
 
 /// Whether [codeUnit] belongs to a script whose glyphs only come out right
 /// when a whole run is shaped together — conjuncts, vowel signs and other

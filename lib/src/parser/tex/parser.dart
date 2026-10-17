@@ -426,7 +426,7 @@ class TexParser {
   /// at the current position, and ends right before a higher explicit
   /// group ends, or at EOF.
   /// If `optional` is true, it parses either a bracket-delimited expression
-  /// (like "[x+y]") or returns null to indicate the absence of a
+  /// (like `[x+y]`) or returns null to indicate the absence of a
   /// bracket-enclosed group.
   /// If `mode` is present, switches to that mode while parsing the group,
   /// and switches back after.

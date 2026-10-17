@@ -117,25 +117,27 @@ class SelectableMath extends StatelessWidget {
   /// If null, this widget will create its own [FocusNode].
   final FocusNode? focusNode;
 
-  /// {@macro flutter_equation_support.widgets.math.mathStyle}
+  /// {@macro flutter_math_equation.widgets.math.mathStyle}
   final MathStyle mathStyle;
 
-  /// {@macro flutter_equation_support.widgets.math.logicalPpi}
+  /// {@macro flutter_math_equation.widgets.math.logicalPpi}
   final double? logicalPpi;
 
-  /// {@macro flutter_equation_support.widgets.math.onErrorFallback}
+  /// {@macro flutter_math_equation.widgets.math.onErrorFallback}
   final OnErrorFallback onErrorFallback;
 
-  /// {@macro flutter_equation_support.widgets.math.options}
+  /// {@macro flutter_math_equation.widgets.math.options}
   final MathOptions? options;
 
-  /// {@macro flutter_equation_support.widgets.math.parseError}
+  /// {@macro flutter_math_equation.widgets.math.parseError}
   final ParseException? parseException;
 
   /// {@macro flutter.widgets.editableText.showCursor}
   final bool showCursor;
 
-  /// {@macro flutter.widgets.editableText.textScaleFactor}
+  /// The number of font pixels for each logical pixel.
+  ///
+  /// If null, the [MediaQuery] text scale is used.
   final double? textScaleFactor;
 
   /// Optional delegate for building the text selection handles and toolbar.
@@ -155,7 +157,7 @@ class SelectableMath extends StatelessWidget {
 
   /// SelectableMath builder using a TeX string
   ///
-  /// {@macro flutter_equation_support.widgets.math.tex_builder}
+  /// {@macro flutter_math_equation.widgets.math.tex_builder}
   ///
   /// See alse:
   ///

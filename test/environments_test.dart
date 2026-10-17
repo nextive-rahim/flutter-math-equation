@@ -1,13 +1,13 @@
-import 'package:flutter_equation_support/src/ast/nodes/cd_vert_arrow.dart';
-import 'package:flutter_equation_support/src/ast/nodes/equation_array.dart';
-import 'package:flutter_equation_support/src/ast/nodes/matrix.dart';
-import 'package:flutter_equation_support/src/ast/nodes/stretchy_op.dart';
-import 'package:flutter_equation_support/src/ast/nodes/symbol.dart';
-import 'package:flutter_equation_support/src/ast/nodes/tag.dart';
-import 'package:flutter_equation_support/src/ast/syntax_tree.dart';
-import 'package:flutter_equation_support/src/parser/tex/parse_error.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/ast/nodes/cd_vert_arrow.dart';
+import 'package:flutter_math_equation/src/ast/nodes/equation_array.dart';
+import 'package:flutter_math_equation/src/ast/nodes/matrix.dart';
+import 'package:flutter_math_equation/src/ast/nodes/stretchy_op.dart';
+import 'package:flutter_math_equation/src/ast/nodes/symbol.dart';
+import 'package:flutter_math_equation/src/ast/nodes/tag.dart';
+import 'package:flutter_math_equation/src/ast/syntax_tree.dart';
+import 'package:flutter_math_equation/src/parser/tex/parse_error.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 TexParser parser(String tex, {int first = 1}) => TexParser(

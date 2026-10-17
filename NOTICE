@@ -1,10 +1,10 @@
-flutter_equation_support
+flutter_math_equation
 
 The math engine in lib/src/ (ast, parser, render, encoder, widgets, utils) was
 originally derived from flutter_math (https://github.com/znjameswu/flutter_math)
 by way of flutter_math_fork 0.7.4 (https://github.com/simpleclub/flutter_math),
 licensed under the Apache License 2.0 (see LICENSE). It has since been
-substantially modified by the flutter_equation_support authors, including a
+substantially modified by the flutter_math_equation authors, including a
 port to KaTeX 0.19.0.
 
 Parts of the parser, macro expander, environments, SVG geometry, symbol tables

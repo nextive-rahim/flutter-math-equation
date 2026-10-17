@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_equation_support/flutter_equation_support.dart';
+import 'package:flutter_math_equation/flutter_math_equation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));

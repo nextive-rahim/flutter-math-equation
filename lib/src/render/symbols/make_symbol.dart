@@ -191,8 +191,7 @@ Widget makeChar(
       text: TextSpan(
         text: character,
         style: TextStyle(
-          fontFamily:
-              'packages/flutter_equation_support/KaTeX_${font.fontFamily}',
+          fontFamily: 'packages/flutter_math_equation/KaTeX_${font.fontFamily}',
           // A character the KaTeX font lacks is drawn from the caller's fonts
           // rather than whatever the platform happens to pick.
           fontFamilyFallback: _fallbackFamilies(options),

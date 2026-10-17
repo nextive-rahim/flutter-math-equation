@@ -1,10 +1,10 @@
-import 'package:flutter_equation_support/src/ast/nodes/symbol.dart';
-import 'package:flutter_equation_support/src/ast/syntax_tree.dart';
-import 'package:flutter_equation_support/src/ast/types.dart';
-import 'package:flutter_equation_support/src/font/metrics/font_metrics.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
-import 'package:flutter_equation_support/src/utils/math_alphanumeric.dart';
+import 'package:flutter_math_equation/src/ast/nodes/symbol.dart';
+import 'package:flutter_math_equation/src/ast/syntax_tree.dart';
+import 'package:flutter_math_equation/src/ast/types.dart';
+import 'package:flutter_math_equation/src/font/metrics/font_metrics.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/utils/math_alphanumeric.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 SymbolNode symbol(String tex) {

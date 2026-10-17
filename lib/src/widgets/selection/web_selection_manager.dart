@@ -94,7 +94,7 @@ mixin WebSelectionControlsManagerMixin<T extends StatefulWidget>
           const TextInputStyle(
             fontSize: 10000, // An absurd size to cover all
             fontWeight: FontWeight.normal,
-            fontFamily: 'packages/flutter_equation_support/KaTeX_Main',
+            fontFamily: 'packages/flutter_math_equation/KaTeX_Main',
             textAlign: TextAlign.center,
             textDirection: TextDirection.ltr,
           ),

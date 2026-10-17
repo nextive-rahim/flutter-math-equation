@@ -70,7 +70,7 @@ class MathOptions {
   /// symbols.
   final double fontSize;
 
-  /// {@template flutter_equation_support.math_options.logicalPpi}
+  /// {@template flutter_math_equation.math_options.logicalPpi}
   /// Logical pixels per inch on screen.
   ///
   /// This parameter decides how big 1 inch is rendered on the screen. Affects

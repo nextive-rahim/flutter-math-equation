@@ -1,9 +1,9 @@
-import 'package:flutter_equation_support/src/ast/nodes/multiscripts.dart';
-import 'package:flutter_equation_support/src/ast/nodes/symbol.dart';
-import 'package:flutter_equation_support/src/ast/syntax_tree.dart';
-import 'package:flutter_equation_support/src/parser/tex/parse_error.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/ast/nodes/multiscripts.dart';
+import 'package:flutter_math_equation/src/ast/nodes/symbol.dart';
+import 'package:flutter_math_equation/src/ast/syntax_tree.dart';
+import 'package:flutter_math_equation/src/parser/tex/parse_error.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 EquationRowNode parse(String tex) =>

@@ -224,7 +224,7 @@ abstract class GreenNode {
   /// adheres to the cursor-visiting order in editing mode, in order to get a
   /// correct cursor range in the editing mode. E.g., for [SqrtNode], when
   /// moving cursor from left to right, the cursor first enters index, then
-  /// base, so it should return [index, base].
+  /// base, so it should return `[index, base]`.
   ///
   /// Please ensure [children] works in the same order as [updateChildren],
   /// [computeChildOptions], and [buildWidget].
@@ -740,9 +740,9 @@ mixin _ClipChildrenMixin on ParentableNode<GreenNode> {
       }
     }
     return updateChildren(<GreenNode>[
-      if (head != null) head,
+      ?head,
       for (var i = childIndex1Ceil; i < childIndex2Floor; i++) children[i],
-      if (tail != null) tail,
+      ?tail,
     ]);
   }
 }

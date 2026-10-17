@@ -1,4 +1,4 @@
-# flutter_equation_support
+# flutter_math_equation
 
 TeX/LaTeX math rendering for Flutter, compatible with KaTeX 0.19, plus a
 renderer for exam-style HTML with embedded equations. Built for Bengali
@@ -23,19 +23,21 @@ Requires Flutter 3.47 or later.
 
 ## Install
 
-```yaml
-dependencies:
-  flutter_equation_support:
-    git:
-      url: https://github.com/nextive-rahim/flutter-equation-support.git
+```sh
+flutter pub add flutter_math_equation
 ```
 
-or, side by side with an app, `path: ../flutter_equation_support`.
+or in `pubspec.yaml`:
+
+```yaml
+dependencies:
+  flutter_math_equation: ^0.1.0
+```
 
 ## Usage
 
 ```dart
-import 'package:flutter_equation_support/flutter_equation_support.dart';
+import 'package:flutter_math_equation/flutter_math_equation.dart';
 
 // An equation.
 Math.tex(

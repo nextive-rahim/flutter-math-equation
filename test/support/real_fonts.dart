@@ -13,15 +13,15 @@ Future<void> loadRealFonts() async {
     if (!name.endsWith('.ttf')) continue;
     final family = name.substring(0, name.indexOf('-'));
     byFamily
-        .putIfAbsent('packages/flutter_equation_support/$family', () => [])
+        .putIfAbsent('packages/flutter_math_equation/$family', () => [])
         .add(file);
   }
-  byFamily['packages/flutter_equation_support/NotoSansBengali'] = Directory(
+  byFamily['packages/flutter_math_equation/NotoSansBengali'] = Directory(
     'lib/fonts/noto_sans_bengali',
   ).listSync().whereType<File>().where((f) => f.path.endsWith('.ttf')).toList();
   // A plain family name, as an app would declare its own prose font.
   byFamily['AppBengali'] =
-      byFamily['packages/flutter_equation_support/NotoSansBengali']!;
+      byFamily['packages/flutter_math_equation/NotoSansBengali']!;
 
   for (final entry in byFamily.entries) {
     final loader = FontLoader(entry.key);

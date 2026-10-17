@@ -13,9 +13,9 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_equation_support/src/parser/tex/parse_error.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/parser/tex/parse_error.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 String? tryParse(String tex) {

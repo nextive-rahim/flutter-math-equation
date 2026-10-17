@@ -1,7 +1,14 @@
-name: flutter_equation_support
+name: flutter_math_equation
 description: TeX/LaTeX math and HTML-with-equations rendering for Flutter, KaTeX 0.19 compatible, with Bengali support.
 version: 0.1.0
-publish_to: none
+repository: https://github.com/nextive-rahim/flutter-math-equation
+issue_tracker: https://github.com/nextive-rahim/flutter-math-equation/issues
+topics:
+  - math
+  - latex
+  - katex
+  - html
+  - bengali
 
 environment:
   sdk: ^3.13.0
@@ -16,7 +23,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   fonts:

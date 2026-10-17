@@ -1,4 +1,4 @@
-import 'package:flutter_equation_support/src/html/html_unescape.dart';
+import 'package:flutter_math_equation/src/html/html_unescape.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

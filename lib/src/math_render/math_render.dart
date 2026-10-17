@@ -990,8 +990,8 @@ class EquationSolver extends StatelessWidget {
     final prose = italic ? style.copyWith(fontStyle: FontStyle.italic) : style;
     final katex = _katexTextStyle(style).copyWith(
       fontFamily: italic
-          ? 'packages/flutter_equation_support/KaTeX_Math'
-          : 'packages/flutter_equation_support/KaTeX_Main',
+          ? 'packages/flutter_math_equation/KaTeX_Math'
+          : 'packages/flutter_math_equation/KaTeX_Main',
       fontStyle: italic ? FontStyle.italic : FontStyle.normal,
       fontFamilyFallback: [if (style.fontFamily != null) style.fontFamily!],
     );

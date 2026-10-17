@@ -53,7 +53,7 @@ class Math extends StatelessWidget {
   /// It can be null only when [parseError] is not null.
   final SyntaxTree? ast;
 
-  /// {@template flutter_equation_support.widgets.math.options}
+  /// {@template flutter_math_equation.widgets.math.mathStyle}
   /// Equation style.
   ///
   /// Choose [MathStyle.display] for displayed equations and [MathStyle.text]
@@ -63,8 +63,8 @@ class Math extends StatelessWidget {
   /// {@endtemplate}
   final MathStyle mathStyle;
 
-  /// {@template flutter_equation_support.widgets.math.logicalPpi}
-  /// {@macro flutter_equation_support.math_options.logicalPpi}
+  /// {@template flutter_math_equation.widgets.math.logicalPpi}
+  /// {@macro flutter_math_equation.math_options.logicalPpi}
   ///
   /// If set to null, the effective [logicalPpi] will scale with
   /// [TextStyle.fontSize]. You can obtain the default scaled value by
@@ -75,12 +75,12 @@ class Math extends StatelessWidget {
   /// {@endtemplate}
   final double? logicalPpi;
 
-  /// {@template flutter_equation_support.widgets.math.onErrorFallback}
+  /// {@template flutter_math_equation.widgets.math.onErrorFallback}
   /// Fallback widget when there are uncaught errors during parsing or building.
   ///
   /// Will be invoked when:
   ///
-  /// * [parseError] is not null.
+  /// * The input fails to parse.
   /// * [SyntaxTree.buildWidget] throw an error.
   ///
   /// Either case, this fallback function is invoked in build functions. So use
@@ -88,21 +88,23 @@ class Math extends StatelessWidget {
   /// {@endtemplate}
   final OnErrorFallback onErrorFallback;
 
-  /// {@template flutter_equation_support.widgets.math.options}
+  /// {@template flutter_math_equation.widgets.math.options}
   /// Overriding [MathOptions] to build the AST.
   ///
   /// Will overrule [mathStyle] and [textStyle] if not null.
   /// {@endtemplate}
   final MathOptions? options;
 
-  /// {@template flutter_equation_support.widgets.math.parseError}
+  /// {@template flutter_math_equation.widgets.math.parseError}
   /// Errors generated during parsing.
   ///
   /// If not null, the [onErrorFallback] widget will be presented.
   /// {@endtemplate}
   final ParseException? parseError;
 
-  /// {@macro flutter.widgets.editableText.textScaleFactor}
+  /// The number of font pixels for each logical pixel.
+  ///
+  /// If null, the [MediaQuery] text scale is used.
   final double? textScaleFactor;
 
   /// {@template fluttermath.widgets.math.textStyle}
@@ -119,7 +121,7 @@ class Math extends StatelessWidget {
 
   /// Math builder using a TeX string
   ///
-  /// {@template flutter_equation_support.widgets.math.tex_builder}
+  /// {@template flutter_math_equation.widgets.math.tex_builder}
   /// [expression] will first be parsed under [settings]. Then the acquired
   /// [SyntaxTree] will be built under a specific options. If [ParseException]
   /// is thrown or a build error occurs, [onErrorFallback] will be displayed.
@@ -231,7 +233,7 @@ class Math extends StatelessWidget {
   /// This function will return a list of `Math` widget along with a list of
   /// line breaking penalties.
   ///
-  /// {@template flutter_equation_support.widgets.math.tex_break}
+  /// {@template flutter_math_equation.widgets.math.tex_break}
   ///
   /// This function will break the equation into pieces according to TeX spec
   /// **as much as possible** (some exceptions exist when `enforceNoBreak: true`

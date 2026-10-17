@@ -1,16 +1,16 @@
 import 'dart:ui' show Color, FontStyle;
 
-import 'package:flutter_equation_support/src/ast/nodes/box_ops.dart';
-import 'package:flutter_equation_support/src/ast/nodes/include_graphics.dart';
-import 'package:flutter_equation_support/src/ast/nodes/left_right.dart';
-import 'package:flutter_equation_support/src/ast/nodes/space.dart';
-import 'package:flutter_equation_support/src/ast/nodes/style.dart';
-import 'package:flutter_equation_support/src/ast/nodes/symbol.dart';
-import 'package:flutter_equation_support/src/ast/options.dart';
-import 'package:flutter_equation_support/src/ast/syntax_tree.dart';
-import 'package:flutter_equation_support/src/parser/tex/parse_error.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/ast/nodes/box_ops.dart';
+import 'package:flutter_math_equation/src/ast/nodes/include_graphics.dart';
+import 'package:flutter_math_equation/src/ast/nodes/left_right.dart';
+import 'package:flutter_math_equation/src/ast/nodes/space.dart';
+import 'package:flutter_math_equation/src/ast/nodes/style.dart';
+import 'package:flutter_math_equation/src/ast/nodes/symbol.dart';
+import 'package:flutter_math_equation/src/ast/options.dart';
+import 'package:flutter_math_equation/src/ast/syntax_tree.dart';
+import 'package:flutter_math_equation/src/parser/tex/parse_error.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 EquationRowNode parse(String tex) =>

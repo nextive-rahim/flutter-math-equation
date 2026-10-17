@@ -23,11 +23,7 @@ class HtmlListItem extends MultiChildRenderObjectWidget {
     Widget? marker,
     this.textAlign,
     required this.textDirection,
-  }) : super(
-         children: child != null
-             ? [child, if (marker != null) marker]
-             : const [],
-       );
+  }) : super(children: child != null ? [child, ?marker] : const []);
 
   @override
   RenderObject createRenderObject(BuildContext context) =>

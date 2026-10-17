@@ -8,7 +8,7 @@ extension SyntaxTreeTexStyleBreakExt on SyntaxTree {
   /// This function will return a list of `SyntaxTree` along with a list
   /// of line breaking penalties.
   ///
-  /// {@macro flutter_equation_support.widgets.math.tex_break}
+  /// {@macro flutter_math_equation.widgets.math.tex_break}
   BreakResult<SyntaxTree> texBreak({
     int relPenalty = 500,
     int binOpPenalty = 700,
@@ -34,7 +34,7 @@ extension EquationRowNodeTexStyleBreakExt on EquationRowNode {
   /// This function will return a list of `EquationRowNode` along with a list
   /// of line breaking penalties.
   ///
-  /// {@macro flutter_equation_support.widgets.math.tex_break}
+  /// {@macro flutter_math_equation.widgets.math.tex_break}
   BreakResult<EquationRowNode> texBreak({
     int relPenalty = 500,
     int binOpPenalty = 700,

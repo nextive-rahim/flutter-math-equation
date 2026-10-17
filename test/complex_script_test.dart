@@ -1,10 +1,10 @@
 import 'package:flutter/painting.dart';
-import 'package:flutter_equation_support/src/ast/nodes/multiscripts.dart';
-import 'package:flutter_equation_support/src/ast/nodes/symbol.dart';
-import 'package:flutter_equation_support/src/ast/syntax_tree.dart';
-import 'package:flutter_equation_support/src/parser/tex/parser.dart';
-import 'package:flutter_equation_support/src/parser/tex/settings.dart';
-import 'package:flutter_equation_support/src/utils/complex_script.dart';
+import 'package:flutter_math_equation/src/ast/nodes/multiscripts.dart';
+import 'package:flutter_math_equation/src/ast/nodes/symbol.dart';
+import 'package:flutter_math_equation/src/ast/syntax_tree.dart';
+import 'package:flutter_math_equation/src/parser/tex/parser.dart';
+import 'package:flutter_math_equation/src/parser/tex/settings.dart';
+import 'package:flutter_math_equation/src/utils/complex_script.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 EquationRowNode parse(String tex) =>
@@ -83,7 +83,7 @@ void main() {
       expect(
         fallbackFamiliesOf(
           const TextStyle(
-            fontFamily: 'packages/flutter_equation_support/KaTeX_Main',
+            fontFamily: 'packages/flutter_math_equation/KaTeX_Main',
             fontFamilyFallback: ['Prose'],
           ),
         ),

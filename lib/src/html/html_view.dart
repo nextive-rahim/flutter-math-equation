@@ -348,7 +348,7 @@ Map<String, String> _defaultStyles(HtmlElement element, int listDepth) {
       return {
         if (attrs['color'] != null) 'color': attrs['color']!,
         if (attrs['face'] != null) 'font-family': attrs['face']!,
-        if (size != null) 'font-size': size,
+        'font-size': ?size,
       };
   }
   return const {};
